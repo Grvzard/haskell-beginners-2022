@@ -52,7 +52,7 @@ data Weekday
     | Friday
     | Saturday
     | Sunday
-    deriving (Show, Eq)
+    deriving (Show, Eq, Enum, Bounded)
 
 {- | Write a function that will display only the first three letters
 of a weekday.
@@ -60,7 +60,8 @@ of a weekday.
 >>> toShortString Monday
 "Mon"
 -}
-toShortString = error "TODO"
+toShortString :: Weekday -> String
+toShortString = take 3 . show
 
 {- | Write a function that returns next day of the week, following the
 given day.
@@ -82,7 +83,10 @@ Tuesday
   would work for **any** enumeration type in Haskell (e.g. 'Bool',
   'Ordering') and not just 'Weekday'?
 -}
-next = error "TODO"
+next :: Weekday -> Weekday
+next day
+    | day == maxBound = minBound
+    | otherwise       = succ day
 
 {- | Implement a function that calculates number of days from the first
 weekday to the second.
@@ -92,7 +96,10 @@ weekday to the second.
 >>> daysTo Friday Wednesday
 5
 -}
-daysTo = error "TODO"
+daysTo :: Weekday -> Weekday -> Int
+daysTo day1 day2
+    | day2 == day1 = 0
+    | otherwise    = 1 + daysTo (next day1) day2
 
 {-
 
@@ -108,9 +115,10 @@ newtype Gold = Gold
 
 -- | Addition of gold coins.
 instance Semigroup Gold where
-
+    g1 <> g2 = Gold (unGold g1 + unGold g2)
 
 instance Monoid Gold where
+    mempty = Gold 0
 
 
 {- | A reward for completing a difficult quest says how much gold
@@ -125,9 +133,11 @@ data Reward = Reward
     } deriving (Show, Eq)
 
 instance Semigroup Reward where
+    r1 <> r2 = Reward (rewardGold r1 <> rewardGold r2) (rewardSpecial r1 || rewardSpecial r2)
 
 
 instance Monoid Reward where
+    mempty = Reward {rewardGold = mempty, rewardSpecial = False}
 
 
 {- | 'List1' is a list that contains at least one element.
@@ -137,7 +147,7 @@ data List1 a = List1 a [a]
 
 -- | This should be list append.
 instance Semigroup (List1 a) where
-
+    (List1 b l1) <> (List1 c l2) = List1 b (l1 ++ [c] ++ l2)
 
 {- | Does 'List1' have the 'Monoid' instance? If no then why?
 
@@ -159,10 +169,16 @@ monsters, you should get a combined treasure and not just the first
 🕯 HINT: You may need to add additional constraints to this instance
   declaration.
 -}
-instance Semigroup (Treasure a) where
+instance (Semigroup a) => Semigroup (Treasure a) where
+    t1 <> t2 = case (t1, t2) of
+        (NoTreasure, NoTreasure) -> NoTreasure
+        (NoTreasure, SomeTreasure c) -> SomeTreasure c
+        (SomeTreasure b, NoTreasure) -> SomeTreasure b
+        (SomeTreasure b, SomeTreasure c) -> SomeTreasure (b <> c)
 
 
-instance Monoid (Treasure a) where
+instance (Semigroup a) => Monoid (Treasure a) where
+    mempty = NoTreasure
 
 
 {- | Abstractions are less helpful if we can't write functions that
@@ -181,7 +197,16 @@ together only different elements.
 Product {getProduct = 6}
 
 -}
-appendDiff3 = error "TODO"
+appendDiff3 :: (Eq a, Semigroup a) => a -> a -> a -> a
+appendDiff3 b c d =
+    let
+        result_1 = if b /= c
+            then b <> c
+            else b
+    in
+        if d == c || d == b
+            then result_1
+            else result_1 <> d
 
 {-
 
