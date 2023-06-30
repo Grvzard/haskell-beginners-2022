@@ -70,10 +70,7 @@ sumOfSquares x y = x * x + y * y
 -}
 -- DON'T FORGET TO SPECIFY THE TYPE IN HERE
 lastDigit :: Int -> Int
-lastDigit n
-    | n == 0 = 0
-    | n > 0  = mod n 10
-    | n < 0  = mod (-n) 10
+lastDigit n = mod (abs n) 10
 
 {- | Write a function that takes three numbers and returns the
 difference between the biggest number and the smallest one.
@@ -90,8 +87,8 @@ function.
 minmax :: Int -> Int -> Int -> Int
 minmax x y z =
     let
-        min' = min (min x y) z
-        max' = max (max x y) z
+        min' = minimum [x, y, z]
+        max' = maximum [x, y, z]
     in
         max' - min'
 
@@ -111,13 +108,7 @@ first character) and negative end position should result in an empty
 string.
 -}
 subString :: Int -> Int -> String -> String
-subString start end str =
-    let
-        start' = if start > 0 then start else 0
-    in
-        if end < 0
-            then ""
-            else drop start' (take (end+1) str)
+subString start end str = drop start (take (end+1) str)
 
 {- | Write a function that takes a String — space separated numbers,
 and finds a sum of the numbers inside this string.
@@ -128,10 +119,7 @@ and finds a sum of the numbers inside this string.
 The string contains only spaces and/or numbers.
 -}
 strSum :: String -> Int
-strSum str = sum (map wordToInt (words str))
-    where
-        wordToInt :: String -> Int
-        wordToInt str = read str :: Int 
+strSum str = sum (map read (words str))
 
 {- | Write a function that takes a number and a list of numbers and
 returns a string, saying how many elements of the list are strictly
@@ -147,20 +135,17 @@ and lower than 6 elements (4, 5, 6, 7, 8 and 9).
 🕯 HINT: Use recursion to implement this function.
 -}
 lowerAndGreater :: Int -> [Int] -> String
-lowerAndGreater n list = go 0 0 n list
+lowerAndGreater = go 0 0
     where
         go :: Int -> Int -> Int -> [Int] -> String
-        go g_cnt l_cnt n l =
-            if null l
-                then
-                    show n
-                    ++ " is greater than " ++
-                    show g_cnt
-                    ++ " elements and lower than " ++
-                    show l_cnt
-                    ++ " elements"
-                else if n > (head l)
-                    then go (g_cnt+1) l_cnt n (tail l)
-                    else if n < (head l)
-                        then go g_cnt (l_cnt+1) n (tail l)
-                        else go g_cnt l_cnt n (tail l)
+        go g_cnt l_cnt n' [] =
+            show n'
+            ++ " is greater than " ++
+            show g_cnt
+            ++ " elements and lower than " ++
+            show l_cnt
+            ++ " elements"
+        go g_cnt l_cnt n' (x:xs)
+            | n' > x = go (g_cnt+1) l_cnt n' xs
+            | n' < x = go g_cnt (l_cnt+1) n' xs
+            | otherwise  = go g_cnt l_cnt n' xs

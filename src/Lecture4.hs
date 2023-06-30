@@ -157,18 +157,14 @@ parseRow str = do
     guard (length parts == 3)
     guard (not (any null parts))
     let product' = head parts
-    let trade_type' = readMaybe $ trimSpace (parts !! 1) :: Maybe TradeType
-    guard (isJust trade_type')
-    let trade_type'' = fromJust trade_type'
-    let cost' = readMaybe $ trimSpace (parts !! 2) :: Maybe Int
-    guard (isJust cost')
-    let cost'' = fromJust cost'
-    guard (cost'' >= 0)
+    trade_type' <- readMaybe $ trimSpace (parts !! 1) :: Maybe TradeType
+    cost' <- readMaybe $ trimSpace (parts !! 2) :: Maybe Int
+    guard (cost' >= 0)
 
     Just Row {
         rowProduct = product',
-        rowTradeType = trade_type'',
-        rowCost = cost''
+        rowTradeType = trade_type',
+        rowCost = cost'
     }
 
 
@@ -340,12 +336,13 @@ the file doesn't have any products.
 -}
 
 calculateStats :: String -> String
-calculateStats str = do
-    let rows = mapMaybe parseRow (splitStrBy '\n' str)
-    let non_empty_rows = nonEmpty rows
-    guard (isJust non_empty_rows)
-    let stats = combineRows (fromJust non_empty_rows)
-    displayStats stats
+calculateStats str =
+    let
+        rows = mapMaybe parseRow (splitStrBy '\n' str)
+    in
+        case nonEmpty rows of
+            Nothing              -> error "the file doesn't have any products"
+            (Just nonempty_rows) -> displayStats (combineRows nonempty_rows)
 
 {- The only thing left is to write a function with side-effects that
 takes a path to a file, reads its content, calculates stats and prints

@@ -54,9 +54,8 @@ zero, you can stop calculating product and return 0 immediately.
 lazyProduct :: [Int] -> Int
 lazyProduct [] = 1
 lazyProduct [x] = x
-lazyProduct (x:xs)
-    | x == 0    = 0
-    | otherwise = product [x, lazyProduct xs]
+lazyProduct (0 : _) = 0
+lazyProduct (x : xs) = x * lazyProduct xs
 
 {- | Implement a function that duplicates every element in the list.
 
@@ -66,7 +65,9 @@ lazyProduct (x:xs)
 "ccaabb"
 -}
 duplicate :: [a] -> [a]
-duplicate = concat . map (take 2 . repeat)
+-- another way:
+-- duplicate = concatMap (replicate 2)
+duplicate = foldr (\x y -> x:x:y) []
 
 {- | Implement function that takes index and a list and removes the
 element at the given position. Additionally, this function should also
@@ -203,7 +204,7 @@ True
 isIncreasing :: [Int] -> Bool
 isIncreasing [] = True
 isIncreasing [_] = True
-isIncreasing (x:xs)
+isIncreasing (x : xs)
     | x < head xs && isIncreasing xs = True
     | otherwise = False
 
@@ -222,8 +223,8 @@ merge [] [] = []
 merge ll [] = ll
 merge [] rl = rl
 merge ll@(x:xs) rl@(y:ys)
-    | x < y     = x : (merge xs rl)
-    | otherwise = head rl : (merge ll ys)
+    | x < y     = x : merge xs rl
+    | otherwise = y : merge ll ys
 
 {- | Implement the "Merge Sort" algorithm in Haskell. The @mergeSort@
 function takes a list of numbers and returns a new list containing the
@@ -306,8 +307,8 @@ eval vars (Var v) = case lookup v vars of
     Just x  -> Right x
 eval vars (Add expr1 expr2) =
     let
-        l_result = (eval vars expr1)
-        r_result = (eval vars expr2)
+        l_result = eval vars expr1
+        r_result = eval vars expr2
     in
         case l_result of
             (Left _)  -> l_result
@@ -337,16 +338,14 @@ Write a function that takes and expression and performs "Constant
 Folding" optimization on the given expression.
 -}
 constantFolding :: Expr -> Expr
-constantFolding (Lit i) = (Lit i)
-constantFolding (Var v) = (Var v)
+constantFolding (Lit i) = Lit i
+constantFolding (Var v) = Var v
 constantFolding (Add e1 e2) = case constantFoldingInner (Add e1 e2) of
     (Nothing, Nothing)    -> error "unreachable"
     (Just expr, Nothing)  -> expr
     (Nothing, Just acc)   -> Lit acc
-    (Just expr, Just acc) ->
-        if acc == 0
-            then expr
-            else Add expr (Lit acc)
+    (Just expr, Just 0)   -> expr
+    (Just expr, Just acc) -> Add expr (Lit acc)
 
 
 constantFoldingInner :: Expr -> (Maybe Expr, Maybe Int)
