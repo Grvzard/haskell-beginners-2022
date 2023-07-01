@@ -101,12 +101,11 @@ module Lecture4
     ) where
 
 import Data.List.NonEmpty (NonEmpty (..), nonEmpty)
-import qualified Data.List.NonEmpty (map)
 import Data.Semigroup (Max (..), Min (..), Semigroup (..), Sum (..))
 import Text.Read (readMaybe)
 import Data.Char
 import Control.Monad
-import Data.Maybe (isJust, fromJust, mapMaybe)
+import Data.Maybe (mapMaybe)
 import System.Environment (getArgs)
 
 {- In this exercise, instead of writing the entire program from
@@ -296,7 +295,7 @@ implement the next task.
 -}
 
 combineRows :: NonEmpty Row -> Stats
-combineRows = sconcat . Data.List.NonEmpty.map rowToStats
+combineRows = sconcat . fmap rowToStats
 
 {-
 After we've calculated stats for all rows, we can then pretty-print

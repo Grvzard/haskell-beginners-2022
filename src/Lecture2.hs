@@ -305,16 +305,10 @@ eval _ (Lit i) = Right i
 eval vars (Var v) = case lookup v vars of
     Nothing -> Left (VariableNotFound v)
     Just x  -> Right x
-eval vars (Add expr1 expr2) =
-    let
-        l_result = eval vars expr1
-        r_result = eval vars expr2
-    in
-        case l_result of
-            (Left _)  -> l_result
-            (Right a) -> case r_result of
-                (Left _)  -> r_result
-                (Right b) -> Right (a + b)
+eval vars (Add expr1 expr2) = do
+        l_result <- eval vars expr1
+        r_result <- eval vars expr2
+        return (l_result + r_result)
 
 {- | Compilers also perform optimizations! One of the most common
 optimizations is "Constant Folding". It performs arithmetic operations
